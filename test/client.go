@@ -13,7 +13,7 @@ func main() {
 
 	header := make(http.Header)
 	header.Add("Origin", "http://localhost:1234")
-	conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:1234", header)
+	conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:1234/ws", header)
 
 	if err != nil {
 		fmt.Println("toto", err.Error())
