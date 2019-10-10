@@ -1,5 +1,6 @@
 package main
 
+// See https://github.com/go-ggz/ggz/blob/renovate/github.com-googollee-go-socket.io-0.x/module/socket/socket.go
 import (
 	"fmt"
 	"log"
@@ -49,10 +50,10 @@ func main() {
 	r := gin.Default()
 	// server := wshandler()
 
-	r.StaticFile("/", "./asset")
+	r.StaticFile("/", "./assets/index.html")
+	r.Static("/assets", "./assets")
 
 	r.GET("/socket.io/", func(c *gin.Context) {
-		c.String(200, "Hello")
 	})
 
 	r.Run("localhost:1234")
