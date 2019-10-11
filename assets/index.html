@@ -21,7 +21,7 @@
     <script src="/assets/socket.io.js"></script>
     <script src="/assets/jquery.js"></script>
     <script>
-      var socket = io('ws://localhost:1234', {transports: ['websocket']});
+      var socket = io('http://localhost:1234', {transports: ['websocket']});
 
       var s2 = io("ws://localhost:1234/chat");
 
@@ -41,7 +41,6 @@
       socket.on('connect', function () {
 
           console.log('socket connected');
-
           //send something
 
       });

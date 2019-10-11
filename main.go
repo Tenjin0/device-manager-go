@@ -1,60 +1,53 @@
 package main
 
-// See https://github.com/go-ggz/ggz/blob/renovate/github.com-googollee-go-socket.io-0.x/module/socket/socket.go
 import (
 	"fmt"
-	"log"
 
 	"github.com/gin-gonic/gin"
-	gosocketio "github.com/graarh/golang-socketio"
-	"github.com/graarh/golang-socketio/transport"
+	socketio "github.com/googollee/go-socket.io"
 )
 
-// var wsupgrader = websocket.Upgrader{
-// 	ReadBufferSize:  1024,
-// 	WriteBufferSize: 1024,
-// 	CheckOrigin: func(r *http.Request) bool {
-// 		return true
-// 	},
-// }
+// https://github.com/gin-gonic/gin/issues/124
+var Socketio_Server *socketio.Server
 
-func wshandler() *gosocketio.Server {
-	server := gosocketio.NewServer(transport.GetDefaultWebsocketTransport())
+func socketHandler(c *gin.Context) {
+	Socketio_Server.On("connection", func(so socketio.Socket) {
+		fmt.Println("on connection")
 
-	//handle connected
-	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel) {
-		log.Println("New client connected")
-		//join them to room
-		c.Join("chat")
+		so.Join("chat")
+
+		so.On("chat message", func(msg string) {
+			fmt.Println("emit:", so.Emit("chat message", msg))
+			so.BroadcastTo("chat", "chat message", msg)
+		})
+		so.On("disconnection", func() {
+			fmt.Println("on disconnect")
+		})
 	})
 
-	type Message struct {
-		Name    string `json:"name"`
-		Message string `json:"message"`
-	}
-
-	//handle custom event
-	server.On("send", func(c *gosocketio.Channel, msg Message) string {
-		fmt.Println(msg)
-		//send event to all in room
-		return "OK"
+	Socketio_Server.On("error", func(so socketio.Socket, err error) {
+		fmt.Printf("[ WebSocket ] Error : %v", err.Error())
 	})
 
-	//setup http server
-
-	return server
+	Socketio_Server.ServeHTTP(c.Writer, c.Request)
 }
 
 func main() {
+	var router_engine = gin.Default()
+	var err error
 
-	r := gin.Default()
-	// server := wshandler()
+	Socketio_Server, err = socketio.NewServer(nil)
+	if err != nil {
+		panic(err)
+	}
 
-	r.StaticFile("/", "./assets/index.html")
-	r.Static("/assets", "./assets")
+	router_engine.GET("/", IndexHandler)
+	router_engine.Static("/public", "./public")
 
-	r.GET("/socket.io/", func(c *gin.Context) {
-	})
+	router_engine.GET("/socket.io", socketHandler)
+	router_engine.POST("/socket.io", socketHandler)
+	router_engine.Handle("WS", "/socket.io", []gin.HandlerFunc{socketHandler})
+	router_engine.Handle("WSS", "/socket.io", []gin.HandlerFunc{socketHandler})
 
-	r.Run("localhost:1234")
+	router_engine.Run(":8000")
 }
