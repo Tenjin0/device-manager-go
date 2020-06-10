@@ -1,1 +1,1 @@
-# device-manager-go
+# device-manager-echo

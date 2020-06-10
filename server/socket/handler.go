@@ -1,25 +1,24 @@
-package main
+package socket
 
 import (
 	"fmt"
-	"log"
 
 	socketio "github.com/googollee/go-socket.io"
 )
 
-func IoHandler() *socketio.Server {
+func GenServer() (*socketio.Server, error) {
 	server, err := socketio.NewServer(nil)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	go server.Serve()
-	// defer server.Close()
-	// server.OnConnect("/", func(s socketio.Conn) error {
-	// 	s.SetContext("")
-	// 	fmt.Println("connected:", s.ID())
-	// 	return nil
-	// })
+	defer server.Close()
+	server.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		fmt.Println("connected:", s.ID())
+		return nil
+	})
 	// server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
 	// 	fmt.Println("notice:", msg)
 	// 	s.Emit("reply", "have "+msg)
@@ -40,5 +39,5 @@ func IoHandler() *socketio.Server {
 	// server.OnDisconnect("/", func(s socketio.Conn, msg string) {
 	// 	fmt.Println("closed", msg)
 	// })
-	return server
+	return server, nil
 }
